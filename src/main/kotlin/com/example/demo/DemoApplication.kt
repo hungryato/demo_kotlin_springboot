@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @SpringBootApplication
 class DemoApplication
@@ -22,13 +23,6 @@ class MessageController(val service: MessageService) {
 	@GetMapping("/")
 	fun index(): List<Message> = service.findMessages()
 
-	/**
-	 * @PostMapping annotation
-	 *
-	 * The method responsible for handling HTTP POST requests needs to be annotated with @PostMapping annotation.
-	 * To be able to convert the JSON sent as HTTP Body content into an object, you need to use the @RequestBody annotation for the method argument.
-	 * Thanks to having Jackson library in the classpath of the application, the conversion happens automatically.
-	 */
 	@PostMapping("/")
 	fun post(@RequestBody message: Message) {
 		service.save(message)
@@ -44,9 +38,17 @@ class MessageService(val db: JdbcTemplate) {
 	}
 
 	fun save(message: Message) {
+		/**
+		 * Elvis operator - ?:
+		 *
+		 * The code message.id ?: UUID.randomUUID().toString() uses the Elvis operator (if-not-null-else shorthand) ?:.
+		 * If the expression to the left of ?: is not null, the Elvis operator returns it; otherwise, it returns the expression to the right.
+		 * Note that the expression on the right-hand side is evaluated only if the left-hand side is null.
+		 */
+		val id = message.id ?: UUID.randomUUID().toString()
 		db.update(
 			"insert into messages values (?, ?)",
-			message.id, message.text
+			id, message.text
 		)
 	}
 }
